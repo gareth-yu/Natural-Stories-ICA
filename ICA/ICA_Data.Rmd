@@ -6,83 +6,124 @@ setwd("~/Documents/GitHub/Natural-Stories-ICA/ICA")
 
 processed_RTs <- read_tsv("processed_RTs.tsv")
 
-# Story 1
+# Isolate Data
+
+## Story 1
 story_1_raw_data <- processed_RTs[processed_RTs$item == 1,]
 story_1_removed_cols <- select(story_1_raw_data, zone, WorkerId, RT, word)
 story_1_data <- pivot_wider(story_1_removed_cols, names_from = WorkerId, values_from = RT)
 story_1_data <- story_1_data[,-1]
 write.csv(story_1_data, "story_1.csv")
 
-# Story 2
+## Story 2
 story_2_raw_data <- processed_RTs[processed_RTs$item == 2,]
 story_2_removed_cols <- select(story_2_raw_data, zone, WorkerId, RT, word)
 story_2_data <- pivot_wider(story_2_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_2_data <- story_2_data[,-1]
 write.csv(story_2_data, "story_2.csv")
 
-# Story 3
+## Story 3
 story_3_raw_data <- processed_RTs[processed_RTs$item == 3,]
 story_3_removed_cols <- select(story_3_raw_data, zone, WorkerId, RT, word)
 story_3_data <- pivot_wider(story_3_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_3_data <- story_3_data[,-1]
 write.csv(story_3_data, "story_3.csv")
 
-# Story 4
+## Story 4
 story_4_raw_data <- processed_RTs[processed_RTs$item == 4,]
 story_4_removed_cols <- select(story_4_raw_data, zone, WorkerId, RT, word)
 story_4_data <- pivot_wider(story_4_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_4_data <- story_4_data[,-1]
 write.csv(story_4_data, "story_4.csv")
 
-# Story 5
+## Story 5
 story_5_raw_data <- processed_RTs[processed_RTs$item == 5,]
 story_5_removed_cols <- select(story_5_raw_data, zone, WorkerId, RT, word)
 story_5_data <- pivot_wider(story_5_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_5_data <- story_5_data[,-1]
 write.csv(story_5_data, "story_5.csv")
 
-# Story 6
+## Story 6
 story_6_raw_data <- processed_RTs[processed_RTs$item == 6,]
 story_6_removed_cols <- select(story_6_raw_data, zone, WorkerId, RT, word)
 story_6_data <- pivot_wider(story_6_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_6_data <- story_6_data[,-1]
 write.csv(story_6_data, "story_6.csv")
 
-# Story 7
+## Story 7
 story_7_raw_data <- processed_RTs[processed_RTs$item == 7,]
 story_7_removed_cols <- select(story_7_raw_data, zone, WorkerId, RT, word)
 story_7_data <- pivot_wider(story_7_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_7_data <- story_7_data[,-1]
 write.csv(story_7_data, "story_7.csv")
 
-# Story 8
+## Story 8
 story_8_raw_data <- processed_RTs[processed_RTs$item == 8,]
 story_8_removed_cols <- select(story_8_raw_data, zone, WorkerId, RT, word)
 story_8_data <- pivot_wider(story_8_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_8_data <- story_8_data[,-1]
 write.csv(story_8_data, "story_8.csv")
 
-# Story 9
+## Story 9
 story_9_raw_data <- processed_RTs[processed_RTs$item == 9,]
 story_9_removed_cols <- select(story_9_raw_data, zone, WorkerId, RT, word)
 story_9_data <- pivot_wider(story_9_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_9_data <- story_9_data[,-1]
 write.csv(story_9_data, "story_9.csv")
 
-# Story 10
+## Story 10
 story_10_raw_data <- processed_RTs[processed_RTs$item == 10,]
 story_10_removed_cols <- select(story_10_raw_data, zone, WorkerId, RT, word)
 story_10_data <- pivot_wider(story_10_removed_cols, names_from = WorkerId, values_from = c(RT))
 story_10_data <- story_10_data[,-1]
 write.csv(story_10_data, "story_10.csv")
 
+# Add Word Position in Sentence
+add_word_positions <- function(story) {
+  words <- unlist(story[,"word"])
+  position <- numeric(nrow(story))
+  count <- 0
+  row <- 1
+  
+  for (word in words) {
+    count <- count + 1
+    position[row] <- count
+    row <- row + 1
+    if (grepl("\\.", word)) {
+      count <- 0 
+    }
+  }
+  
+  cbind(position, story)
+}
 
-# Testing how to control for word length
-word_lengths <- nchar(story_1_data$word)
-word_means <- apply(story_1_data[,-1], 1, mean, na.rm = TRUE)
+story_1_data <- add_word_positions(story_1_data)
 
-plot(word_lengths, word_means)
-lm_word_length <- lm(word_means ~ word_lengths)
-abline(lm_word_length)
+story_2_data <- add_word_positions(story_2_data)
+
+story_3_data <- add_word_positions(story_3_data)
+
+story_4_data <- add_word_positions(story_4_data)
+
+story_5_data <- add_word_positions(story_5_data)
+
+story_6_data <- add_word_positions(story_6_data)
+
+story_7_data <- add_word_positions(story_7_data)
+
+story_8_data <- add_word_positions(story_8_data)
+
+story_9_data <- add_word_positions(story_9_data)
+
+story_10_data <- add_word_positions(story_10_data)
 
 
+# Plot RT vs Position
+all_word_positions <- c(story_1_data[,"position"], story_2_data[,"position"], story_3_data[,"position"], story_4_data[,"position"], story_5_data[,"position"],  story_6_data[,"position"], story_7_data[,"position"], story_8_data[,"position"], story_9_data[,"position"], story_10_data[,"position"])
+
+all_word_means <- c(apply(story_1_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_2_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_3_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_4_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_5_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_6_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_7_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_8_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_9_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_10_data[,-(1:2)], 1, mean, na.rm = TRUE))
+
+plot(all_word_positions, all_word_means, cex = 0.75)
+
+lm_word_position <- lm(all_word_means ~ all_word_positions)
+abline(lm_word_position, col = "red")
