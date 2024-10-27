@@ -6,6 +6,7 @@ setwd("~/Documents/GitHub/Natural-Stories-ICA/ICA")
 
 processed_RTs <- read_tsv("processed_RTs.tsv")
 
+
 # Isolate Data
 
 isolate_story <- function(data, story) {
@@ -25,6 +26,7 @@ for (i in 1:10) {
 
 
 # Add Word Position in Sentence
+
 add_word_positions <- function(story) {
   words <- unlist(story[,"word"])
   position <- numeric(nrow(story))
@@ -44,7 +46,7 @@ add_word_positions <- function(story) {
 }
 
 for (i in 1:10) {
-  story_name <- paste0("story_", i, "_data")
+  story_name <- paste0("s", i, "data")
   assign(story_name, add_word_positions(get(story_name)))
 }
 
@@ -63,10 +65,9 @@ remove_word_length <- function(story) {
 }
 
 for (i in 1:10) {
-  story_name <- paste0("story_", i, "_data")
+  story_name <- paste0("s", i, "data")
   assign(story_name, remove_word_length(get(story_name)))
 }
-
 
 
 # Other Things
@@ -77,7 +78,7 @@ names(story_1_data_test)[2] <- "length"
 
 lm(word_mean ~ length, data = story_1_data_test)
 
-# Plot RT vs Position
+## Plot RT vs Position
 all_word_positions <- c(story_1_data[,"position"], story_2_data[,"position"], story_3_data[,"position"], story_4_data[,"position"], story_5_data[,"position"],  story_6_data[,"position"], story_7_data[,"position"], story_8_data[,"position"], story_9_data[,"position"], story_10_data[,"position"])
 
 all_word_means <- c(apply(story_1_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_2_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_3_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_4_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_5_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_6_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_7_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_8_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_9_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_10_data[,-(1:2)], 1, mean, na.rm = TRUE))
