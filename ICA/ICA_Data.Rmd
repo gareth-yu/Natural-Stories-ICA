@@ -8,75 +8,21 @@ processed_RTs <- read_tsv("processed_RTs.tsv")
 
 # Isolate Data
 
-## Story 1
-story_1_raw_data <- processed_RTs[processed_RTs$item == 1,]
-story_1_removed_cols <- select(story_1_raw_data, zone, WorkerId, RT, word)
-story_1_data <- pivot_wider(story_1_removed_cols, names_from = WorkerId, values_from = RT)
-story_1_data <- story_1_data[,-1]
-write.csv(story_1_data, "story_1.csv")
+isolate_story <- function(data, story) {
+  story_raw_data <- data[data$item == story,]
+  story_removed_cols <- select(story_raw_data, zone, WorkerId, RT, word)
+  story_data <- pivot_wider(story_removed_cols, names_from = WorkerId, values_from = RT)
+  story_data <- story_data[,-1]
+  story_name <- paste0("story_", story, ".csv")
+  write.csv(story_data, story_name)
+  story_data
+}
 
-## Story 2
-story_2_raw_data <- processed_RTs[processed_RTs$item == 2,]
-story_2_removed_cols <- select(story_2_raw_data, zone, WorkerId, RT, word)
-story_2_data <- pivot_wider(story_2_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_2_data <- story_2_data[,-1]
-write.csv(story_2_data, "story_2.csv")
+for (i in 1:10) {
+  story_name <- paste0("s", i, "data")
+  assign(story_name, isolate_story(processed_RTs, i))
+}
 
-## Story 3
-story_3_raw_data <- processed_RTs[processed_RTs$item == 3,]
-story_3_removed_cols <- select(story_3_raw_data, zone, WorkerId, RT, word)
-story_3_data <- pivot_wider(story_3_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_3_data <- story_3_data[,-1]
-write.csv(story_3_data, "story_3.csv")
-
-## Story 4
-story_4_raw_data <- processed_RTs[processed_RTs$item == 4,]
-story_4_removed_cols <- select(story_4_raw_data, zone, WorkerId, RT, word)
-story_4_data <- pivot_wider(story_4_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_4_data <- story_4_data[,-1]
-write.csv(story_4_data, "story_4.csv")
-
-## Story 5
-story_5_raw_data <- processed_RTs[processed_RTs$item == 5,]
-story_5_removed_cols <- select(story_5_raw_data, zone, WorkerId, RT, word)
-story_5_data <- pivot_wider(story_5_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_5_data <- story_5_data[,-1]
-write.csv(story_5_data, "story_5.csv")
-
-## Story 6
-story_6_raw_data <- processed_RTs[processed_RTs$item == 6,]
-story_6_removed_cols <- select(story_6_raw_data, zone, WorkerId, RT, word)
-story_6_data <- pivot_wider(story_6_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_6_data <- story_6_data[,-1]
-write.csv(story_6_data, "story_6.csv")
-
-## Story 7
-story_7_raw_data <- processed_RTs[processed_RTs$item == 7,]
-story_7_removed_cols <- select(story_7_raw_data, zone, WorkerId, RT, word)
-story_7_data <- pivot_wider(story_7_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_7_data <- story_7_data[,-1]
-write.csv(story_7_data, "story_7.csv")
-
-## Story 8
-story_8_raw_data <- processed_RTs[processed_RTs$item == 8,]
-story_8_removed_cols <- select(story_8_raw_data, zone, WorkerId, RT, word)
-story_8_data <- pivot_wider(story_8_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_8_data <- story_8_data[,-1]
-write.csv(story_8_data, "story_8.csv")
-
-## Story 9
-story_9_raw_data <- processed_RTs[processed_RTs$item == 9,]
-story_9_removed_cols <- select(story_9_raw_data, zone, WorkerId, RT, word)
-story_9_data <- pivot_wider(story_9_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_9_data <- story_9_data[,-1]
-write.csv(story_9_data, "story_9.csv")
-
-## Story 10
-story_10_raw_data <- processed_RTs[processed_RTs$item == 10,]
-story_10_removed_cols <- select(story_10_raw_data, zone, WorkerId, RT, word)
-story_10_data <- pivot_wider(story_10_removed_cols, names_from = WorkerId, values_from = c(RT))
-story_10_data <- story_10_data[,-1]
-write.csv(story_10_data, "story_10.csv")
 
 # Add Word Position in Sentence
 add_word_positions <- function(story) {
@@ -120,6 +66,7 @@ for (i in 1:10) {
   story_name <- paste0("story_", i, "_data")
   assign(story_name, remove_word_length(get(story_name)))
 }
+
 
 
 # Other Things
