@@ -15,12 +15,24 @@ n_components = 2
 V = data.to_numpy()
 V = (V - V.min(0))
 
-bdnmf = nimfa.Bd(V, seed="random_c", rank=n_components, max_iter=12, alpha=np.zeros((V.shape[0], n_components)),
-          beta=np.zeros((n_components, V.shape[1])), theta=.0, k=.0, sigma=1., skip=100, stride=1,
-          n_w=np.zeros((n_components, 1)), n_h=np.zeros((n_components, 1)), n_run = 1, n_sigma=False) 
-bdnmf_fit = bdnmf()
-    
-W = bdnmf_fit.basis()
-np.savetxt("basis.csv", W, delimiter=",")
-H = bdnmf_fit.coef()
-np.savetxt("coef.csv", H, delimiter=",")
+save_dir = "/Users/garethyu/Documents/GitHub/Natural-Stories-ICA/ICA/Fake Data BNMF/"
+
+for r_ in range(50):
+  bdnmf = nimfa.Bd(V, seed="random_c", rank=n_components, max_iter=12, alpha=np.zeros((V.shape[0], n_components)),
+            beta=np.zeros((n_components, V.shape[1])), theta=.0, k=.0, sigma=1., skip=100, stride=1,
+            n_w=np.zeros((n_components, 1)), n_h=np.zeros((n_components, 1)), n_run = 1, n_sigma=False) 
+  bdnmf_fit = bdnmf()
+      
+  W = bdnmf_fit.basis()
+  np.savetxt("basis%d.csv" % (r_), W, delimiter=",")
+  H = bdnmf_fit.coef()
+  np.savetxt("coef%d.csv" % (r_), H, delimiter=",")
+  
+  data_transformed = np.asarray(H.T).copy()
+  
+  np.savetxt('%sfake_data_ncomp_%d_run%d.csv' % (save_dir, n_components, r_), W, delimiter=",")
+  np.save('%sfake_data_ncomp_%d_run%d.npy' % (save_dir, n_components, r_), {'data_transformed': data_transformed, 'W': np.asarray(W), 'fit': bdnmf_fit.fit})
+
+
+
+
