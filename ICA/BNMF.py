@@ -6,10 +6,10 @@ import nimfa
 import pandas as pd
 
 # Import csv file
-data = pd.read_csv('fake_data.csv')
+data = pd.read_csv('/Users/garethyu/Documents/GitHub/Natural-Stories-ICA/ICA/Fake Data BNMF/fake_data.csv')
 data = data.drop(data.columns[0], axis=1)
 
-n_components = 2
+n_components = 6
 
 # Change data to a numpy
 V = data.to_numpy()
@@ -24,9 +24,7 @@ for r_ in range(50):
   bdnmf_fit = bdnmf()
       
   W = bdnmf_fit.basis()
-  np.savetxt("basis%d.csv" % (r_), W, delimiter=",")
   H = bdnmf_fit.coef()
-  np.savetxt("coef%d.csv" % (r_), H, delimiter=",")
   
   data_transformed = np.asarray(H.T).copy()
   

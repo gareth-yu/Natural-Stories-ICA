@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics.pairwise import euclidean_distances
 
-n_components = 2
+n_components = 6
 save_dir = '/Users/garethyu/Documents/GitHub/Natural-Stories-ICA/ICA/Fake Data BNMF/'
 nruns = 50
 
