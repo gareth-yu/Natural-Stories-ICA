@@ -1,6 +1,6 @@
+library(tidyverse)
 
 rm(list=ls())
-library(tidyverse)
 
 setwd("~/Documents/GitHub/Natural-Stories-ICA/ICA")
 
@@ -21,8 +21,171 @@ isolate_story <- function(data, story) {
 
 for (i in 1:10) {
   story_name <- paste0("s", i, "data")
-  assign(story_name, isolate_story(processed_RTs, i))
+  assign(story_name, as.data.frame(isolate_story(processed_RTs, i)))
 }
+
+
+# Clean for Word Length
+
+remove_word_length <- function(story) {
+  new_story <- story
+  for (i in 2:ncol(story)) {
+    subject_RT <- na.omit(story[,i])
+    word_lengths <- nchar(story$word[!is.na(story[,i])])
+    test <- lm(subject_RT ~ word_lengths)
+    new_story[!is.na(story[,i]),i] <- test$resid
+  }
+  new_story
+}
+
+for (i in 1:10) {
+  story_name <- paste0("s", i, "data")
+  assign(story_name, remove_word_length(get(story_name)))
+}
+
+# Remove Negativity
+for (i in 1:10) {
+  story_name <- paste0("s", i, "data")
+  assign(story_name, get(story_name)[,-1] - min(get(story_name)[,-1], na.rm = TRUE))
+}
+
+# Check Missing Data Percentage
+## List of matrices
+stories <- list(s1data, s2data, s3data, s4data, s5data, s6data, s7data, s8data, s9data, s10data)
+
+## Calculate the percentage of missing data for each participant
+missing_percentages <- sapply(stories, function(data) {
+  colMeans(is.na(data)) * 100
+})
+
+## Combine Missing Percentages Across Stories
+combined_missing_all <- do.call(rbind, lapply(seq_along(missing_percentages), function(i) {
+  data.frame(
+    ID = names(missing_percentages[[i]]),
+    missing_percent = unname(missing_percentages[[i]])
+  )
+}))
+
+combined_missing <- combined_missing_all %>%
+  group_by(ID) %>%
+  summarise(mean_missing = mean(missing_percent), .groups = "drop")
+
+## Identify participants to remove (more than 10% missing data)
+remove_participants <- combined_missing[which(combined_missing[2] > 10), 1]
+
+## Remove participants from all matrices
+filtered_stories <- lapply(stories, function(data) {
+  data[, !(colnames(data) %in% remove_participants$ID)]
+})
+
+## Unpack filtered matrices back to original variables
+stories <- filtered_stories
+
+
+s1data <- filtered_stories[[1]]
+s2data <- filtered_stories[[2]]
+s3data <- filtered_stories[[3]]
+s4data <- filtered_stories[[4]]
+s5data <- filtered_stories[[5]]
+s6data <- filtered_stories[[6]]
+s7data <- filtered_stories[[7]]
+s8data <- filtered_stories[[8]]
+s9data <- filtered_stories[[9]]
+s10data <- filtered_stories[[10]]
+
+
+# Find How Many Read Each 5
+story_participants <- lapply(stories, colnames)
+participant_IDs <- unique(unlist(story_participants))
+
+## Find which stories each participant read
+participant_stories <- lapply(participant_IDs, function(participant) {
+  which(sapply(story_participants, function(story) participant %in% story))
+})
+
+## Assign participant IDs as names
+names(participant_stories) <- participant_IDs
+participant_stories
+
+## Convert each vector into a character string
+part_stories_string <- sapply(participant_stories, paste, collapse = ",")
+
+## Count unique vectors
+story_counts <- table(part_stories_string)
+
+## Convert the table back to a data frame
+story_counts_df <- as.data.frame(story_counts)
+colnames(story_counts_df) <- c("Stories", "Count")
+print(story_counts_df)
+
+
+
+# Filling in Missing Data
+zscore_data <- lapply(stories, scale)
+
+impute_missing <- function(data) {
+  for (i in seq_len(nrow(data))) {
+    data[i, is.na(data[i,])] <- mean(data[i, ], na.rm = TRUE)
+  }
+  return(data)
+}
+
+zscore_data <- lapply(zscore_data, impute_missing)
+anyNA(zscore_data)
+
+scale_attributes <- lapply(stories, function(df) {
+  list(
+    mean = sapply(df, mean, na.rm = TRUE),
+    sd = sapply(df, sd, na.rm = TRUE)
+  )
+})
+
+returned_stories <- list()
+
+for (i in 1:10) {
+  returned_stories[[i]] <- sweep(sweep(zscore_data[[i]], 2, attr(zscore_data[[i]], "scaled:scale"), `*`), 2, attr(zscore_data[[i]], "scaled:center"), `+`)
+}
+
+for (i in 1:10) {
+  story_name <- paste0("story_", i, ".csv")
+  write.csv(returned_stories[[i]], story_name)
+}
+
+### Remove attributes
+for (i in seq_along(returned_stories)) {
+  attr(returned_stories[[i]], "scaled:scale") <- NULL
+  attr(returned_stories[[i]], "scaled:center") <- NULL
+}
+
+
+# Index Only Those who Read Stories 1-5
+target_stories = as.integer(c(1,2,3,4,5))
+
+target_participants_names <- names(participant_stories[which(sapply(participant_stories, function(x) identical(x, target_stories)))])
+
+target_participants <- lapply(returned_stories, function(data) {
+  data[, (colnames(data) %in% target_participants_names), drop = FALSE]
+})
+
+# Format Data for BNMF
+final_data_1_4 <- rbind(target_participants[[1]], target_participants[[2]], target_participants[[3]], target_participants[[4]])
+
+write.csv(final_data_1_4, "BNMF_data_1_4.csv")
+
+
+# Download RSS Information to Determine Rank
+components_RSS <- 20
+RSS <- matrix(0, nrow = 50, ncol = components_RSS)
+for (i in 1:components_RSS) {
+  RSS_file <- paste0("~/Documents/GitHub/Natural-Stories-ICA/ICA/BNMF Files/BNMF_1_4_ncomp_", i, "_RSS.csv")
+  RSS[,i] <- as.vector(read.csv(RSS_file, header = FALSE))$V1
+}
+
+mean_RSSs <- apply(RSS, 2, mean)
+mean_RSSs
+plot(mean_RSSs)
+
+
 
 
 # Add Word Position in Sentence
@@ -51,37 +214,18 @@ for (i in 1:10) {
 }
 
 
-# Clean for Word Length
-
-remove_word_length <- function(story) {
-  new_story <- story
-  for (i in 3:ncol(story)) {
-    subject_RT <- na.omit(story[,i])
-    word_lengths <- nchar(story$word[!is.na(story[,i])])
-    test <- lm(subject_RT ~ word_lengths)
-    new_story[!is.na(story[,i]),i] <- test$resid
-  }
-  new_story
-}
-
-for (i in 1:10) {
-  story_name <- paste0("s", i, "data")
-  assign(story_name, remove_word_length(get(story_name)))
-}
-
-
 # Other Things
-story_1_data_test <- cbind(nchar(story_1_data[,"word"]), story_1_data)
-story_1_data_test <- cbind(apply(story_1_data[,-(1:2)], 1, mean, na.rm = TRUE), story_1_data_test)
-names(story_1_data_test)[1] <- "word_mean"
-names(story_1_data_test)[2] <- "length"
+s1data_test <- cbind(nchar(s1data[,"word"]), s1data)
+s1data_test <- cbind(apply(s1data[,-(1:2)], 1, mean, na.rm = TRUE), s1data_test)
+names(s1data_test)[1] <- "word_mean"
+names(s1data_test)[2] <- "length"
 
-lm(word_mean ~ length, data = story_1_data_test)
+lm(word_mean ~ length, data = s1data_test)
 
 ## Plot RT vs Position
-all_word_positions <- c(story_1_data[,"position"], story_2_data[,"position"], story_3_data[,"position"], story_4_data[,"position"], story_5_data[,"position"],  story_6_data[,"position"], story_7_data[,"position"], story_8_data[,"position"], story_9_data[,"position"], story_10_data[,"position"])
+all_word_positions <- c(s1data[,"position"], s2data[,"position"], s3data[,"position"], s4data[,"position"], s5data[,"position"],  s6data[,"position"], s7data[,"position"], s8data[,"position"], s9data[,"position"], s10data[,"position"])
 
-all_word_means <- c(apply(story_1_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_2_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_3_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_4_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_5_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_6_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_7_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_8_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_9_data[,-(1:2)], 1, mean, na.rm = TRUE), apply(story_10_data[,-(1:2)], 1, mean, na.rm = TRUE))
+all_word_means <- c(apply(s1data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s2data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s3data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s4data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s5data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s6data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s7data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s8data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s9data[,-(1:2)], 1, mean, na.rm = TRUE), apply(s10data[,-(1:2)], 1, mean, na.rm = TRUE))
 
 test_word_means <- all_word_means[all_word_positions < 40]
 test_word_positions <- all_word_positions[all_word_positions < 40]
@@ -93,7 +237,7 @@ abline(lm_word_position, col = "red")
 
 test_regression <- lm(test_word_means ~ test_word_positions)
 
-RT_1 <- story_1_data_test[,8]
-positions <- story_1_data_test[,3]
+RT_1 <- s1data_test[,8]
+positions <- s1data_test[,3]
 
 lm(RT_1 ~ positions)
